@@ -1,0 +1,17 @@
+[ req ]
+default_bits           = 2048
+days                   = 365
+distinguished_name     = req_distinguished_name
+attributes             = req_attributes
+prompt                 = no
+
+[ req_distinguished_name ]
+C                      = US
+ST                     = CA
+L                      = Stanford
+O                      = CS 255 Super Secure CA Organization
+OU                     = CS 255 Super Secure CA
+CN                     = cs255supersecureca.example.com
+emailAddress           = cs255ta@cs.stanford.edu
+
+[ req_attributes ]
