@@ -3,6 +3,7 @@ var lib = require('./lib');
 var sjcl = require('./sjcl');
 
 var tls = require('tls');
+var fs = require('fs');
 
 var server = function(server_key, server_key_password, server_cert, client_pub_key_base64) {
   var server_log = lib.log_with_prefix('server');
@@ -80,6 +81,7 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
   }
 
   function on_connect(connection_socket) {
+		server_log("Got connection");
     if (socket != null) {
       server_log('rejecting additional client connections');
       connection_socket.end();
@@ -111,17 +113,26 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
 
   server.start = function(port) {
     var server_options = {
-      // TODO: initialize TLS server options
-      key: null,
-      cert: null,
-      passphrase: null
+			rejectUnauthorized: true,
+      key: server_key,
+      cert: server_cert,
+      passphrase: server_key_password,
+			// requestCert: true,
+			// ca: [fs.readFileSync('data/rootCA.pem')]
     };
+
+		console.log(server_key, server_cert, server_key_password);
 
     tls_server = tls.createServer(server_options, on_connect);
 
     tls_server.listen(port, function() {
       server_log('listening on port ' + port);
+
+			tls_server.on('close', function() {
+				server_log('closing server');
+			});
     });
+
   }
 
   return server;

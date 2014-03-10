@@ -1,7 +1,6 @@
-
 // Change these for testing:
-var test_server_key_password = 'serverpw';
-var test_client_key_password = 'clientpw';
+var test_server_key_password = 'banana';
+var test_client_key_password = 'banana';
 
 
 
@@ -16,6 +15,8 @@ var ca_crt = fs.readFileSync('data/rootCA.pem')
 
 var client_pub_key_base64 = fs.readFileSync('data/client_pub_key').toString('utf8');
 var client_sec_key_base64 = fs.readFileSync('data/client_sec_key').toString('utf8');
+
+console.log("[client] Building new client: ", client_sec_key_base64, test_client_key_password, ca_crt);
 
 var server1 = server.server(server_key, test_server_key_password,
                 server_crt, client_pub_key_base64);
