@@ -1,4 +1,3 @@
-
 var lib = require('./lib');
 var sjcl = require('./sjcl');
 
@@ -12,6 +11,9 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
   var tls_server;
   var socket = null;
   var protocol_state;
+	var challenge_bitarray;
+	var connection_count = 0;
+	var initial_randomness = lib.random_bitarray(256);
 
   function unwrap_client_pub_key() {
     var pair_pub_pt = sjcl.ecc.curves['c256'].fromBits(
@@ -27,9 +29,10 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
 
   var client_pub_key = unwrap_client_pub_key();
 
+	// FIXME is this long enough?
   function get_new_challenge() {
-    // TODO: generate challenge
-    return 'what is your favorite color?';
+		challenge_bitarray = lib.HMAC(initial_randomness, lib.string_to_bitarray("" + connection_count));
+    return lib.bitarray_to_base64(challenge_bitarray);
   }
 
   function process_client_msg(json_data) {
@@ -42,41 +45,41 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
     }
 
     switch (data.type) {
-      case TYPE['RESPONSE']:
-        if (protocol_state != 'CHALLENGE') {
-          protocol_abort();
-          return;
-        }
-
-        protocol_state = 'ABORT';
-        var response_correct = false;
-        // TODO: check challenge response
-        response_correct = true;
-        if (response_correct) {
-          server_log('authentication succeeded')
-          lib.send_message(socket, TYPE['SUCCESS'], '');
-
-          protocol_state = 'SUCCESS';
-        } else {
-          server_log('authentication failed');
-          protocol_abort();
-        }
-        break;
-
-      case TYPE['SESSION_MESSAGE']:
-        if (protocol_state != 'SUCCESS') {
-          protocol_abort();
-          return;
-        }
-        server_log('received session message: ' + data.message);
-        var l = data.message.length;
-        lib.send_message(socket, TYPE['SESSION_MESSAGE'], l);
-        server_log('sent session message: ' + l);
-        break;
-
-      default:
+    case TYPE['RESPONSE']:
+      if (protocol_state != 'CHALLENGE') {
         protocol_abort();
-        break;
+        return;
+      }
+
+      protocol_state = 'ABORT';
+
+			var response_correct = lib.ECDSA_verify(client_pub_key, challenge_bitarray, lib.base64_to_bitarray(data.message));
+
+      if (response_correct) {
+        server_log('authentication succeeded')
+        lib.send_message(socket, TYPE['SUCCESS'], '');
+
+        protocol_state = 'SUCCESS';
+      } else {
+        server_log('authentication failed');
+        protocol_abort();
+      }
+      break;
+
+    case TYPE['SESSION_MESSAGE']:
+      if (protocol_state != 'SUCCESS') {
+        protocol_abort();
+        return;
+      }
+      server_log('received session message: ' + data.message);
+      var l = data.message.length;
+      lib.send_message(socket, TYPE['SESSION_MESSAGE'], l);
+      server_log('sent session message: ' + l);
+      break;
+
+    default:
+      protocol_abort();
+      break;
     }
   }
 
@@ -107,6 +110,7 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
     protocol_state = 'CHALLENGE';
     lib.send_message(socket, TYPE['CHALLENGE'], challenge);
     server_log('sent challenge to client');
+		connection_count++;
   }
 
   server = {};
@@ -117,11 +121,8 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
       key: server_key,
       cert: server_cert,
       passphrase: server_key_password,
-			// requestCert: true,
 			// ca: [fs.readFileSync('data/rootCA.pem')]
     };
-
-		console.log(server_key, server_cert, server_key_password);
 
     tls_server = tls.createServer(server_options, on_connect);
 
@@ -130,6 +131,10 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
 
 			tls_server.on('close', function() {
 				server_log('closing server');
+			});
+			
+			tls_server.on('clientError', function () {
+				server_log('client fucked up');
 			});
     });
 
