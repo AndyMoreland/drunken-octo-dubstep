@@ -1,0 +1,106 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath}
+% \usepackage{fullpage}
+\usepackage[top=1in, bottom=1in, left=0.8in, right=1in]{geometry}
+\usepackage{multicol}
+\usepackage{amsfonts}
+\usepackage{wrapfig}
+\usepackage{mathtools}
+\usepackage{parskip}
+\usepackage{fancyhdr}
+\usepackage{amssymb}
+\usepackage{enumerate}
+\usepackage{titlesec}
+
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+\DeclarePairedDelimiter{\floor}{\lfloor}{\rfloor}
+
+\newcommand{\overbar}[1]{\mkern 1.5mu\overline{\mkern-1.5mu#1\mkern-1.5mu}\mkern 1.5mu}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathcal{N}}
+\newcommand{\Q}{\mathbb{Q}}
+\renewcommand{\O}{\mathbb{O}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\C}{\mathcal{C}}
+\newcommand{\F}{\mathbb{F}}
+\renewcommand{\P}{\mathcal{P}}
+\newcommand{\X}{\mathbb{X}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\V}{\mathcal{V}}
+\newcommand{\W}{\mathcal{W}}
+\newcommand{\sectionbreak}{\clearpage}
+\renewcommand{\L}{\mathcal{L}}
+\newcommand{\la}{\langle}
+\newcommand{\ra}{\rangle}
+\newcommand{\pe}{^{\perp}}
+\newcommand{\ep}{\epsilon}
+\renewcommand{\lim}{\text{lim }}
+\newcommand*{\xor}{\mathbin{\oplus}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\B}{\mathcal{B}}
+
+
+  
+\setlength{\columnsep}{0.1pc}
+
+\title{CS255 Problem Set 3}
+\author{Andrew Moreland -- \texttt{andymo@stanford.edu} -- 005752336 \\ Worked with Atticus Christensen}
+\date{\today}
+\begin{document}
+
+\maketitle
+\rule{\linewidth}{0.4pt}
+
+\clearpage
+
+\vspace{-0.3in}
+\setlength{\parskip}{10pt plus 1pt minus 1pt}
+\pagestyle{fancy}
+\rhead{Andrew Moreland}
+
+\begin{enumerate}
+
+\item
+
+  The modified protocol is not secure. This is as anyone, notably any attacker, can compute SHA-256$(\ell)$, so if someone were to impersonate the client, they could pass the challenge and response by computing SHA-256$(\ell)$, where $\ell$ is the challenge. Therefore, this modified protocol is not secure.
+
+\item
+  
+  We do not need to check the issuer field because we have pinned our root CA. In other words, if the certificate we receive from the server is valid it must have been signed by our pinned root CA. This implies that the certificate is issued by the root CA, so checking the issued by field is redundant.
+  
+\item
+
+  Assume that the attacker has access to the storage location of the certificates used by the client.
+
+  If, instead of storing the certificate and deriving a secret key from it and a password, you had simply stored the derived secret key on disk, then the attacker would be able to mimic the client by simply deserializing that secret key and using it to sign the challenge.
+  
+  Similarly, if no password were used (as is often the case with SSH keys), then the attacker with access to the certificate would be able to derive the secret key and mimic the client.
+
+\item
+
+  \begin{enumerate}
+  \item
+    Symmetric-key challenge-response is faster because it requires fewer communications. In particular, it requires one from the client to the server, rather than the two that assymetric challenge-response requires: one from the server to the client and then a signature response.
+
+  \item 
+    If the server has a small amount of trusted storage and a large number of clients then (by the pigeonhole principle) it cannot store unique secret keys for all clients. This means that it must reuse keys in which case clients can impersonate eachother.
+    
+  \end{enumerate}
+
+\item 
+  
+  \begin{enumerate}
+  \item 
+    The server would simply store the (salted) hashed password of the client. It is unsafe to simply store the client's password because if the server is compromised then the client's password is leaked. Moreover, we can't just store a hash of the client's password because this hash is possibly vulnerable to rainbow table cracking attacks.
+    
+    In order to authenticate, the client would transmit their password which would then be salted and hashed and compared to the stored value.
+
+  \item 
+    If the attacker is able to trick the client into believing that it is actually the server, then the client will submit its password using the hacker's public key, so the attacker is able to learn the password. Even after the certificate expires, the hacker will know the user's password and therefore be able to authenticate with the real server as the user.
+    
+  \end{enumerate}
+
+  
+\end{enumerate}
+
+\end{document}
