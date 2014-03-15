@@ -83,7 +83,9 @@
     Symmetric-key challenge-response is faster because it requires fewer communications. In particular, it requires one from the client to the server, rather than the two that assymetric challenge-response requires: one from the server to the client and then a signature response.
 
   \item 
-    If the server has a small amount of trusted storage and a large number of clients then (by the pigeonhole principle) it cannot store unique secret keys for all clients. This means that it must reuse keys in which case clients can impersonate eachother.
+    If the server has a small amount of trusted storage and a large number of clients then (by the pigeonhole principle) it cannot store unique symmetric keys for all clients. This means that it must reuse keys in which case clients can impersonate eachother. This fact then limits the number of clients with whom the server can securely communicate if it stores all symmetric keys in trusted storage.
+
+    Similarly, if the clients have a small amount of trusted storage, they can also securely communicate with only a limited number of servers
     
   \end{enumerate}
 
