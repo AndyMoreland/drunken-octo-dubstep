@@ -16,14 +16,19 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
 	// FIXME: could store key on disk -- would allow attacker w/ access to disk to screw you
 	// FIXME: if the attacker has access to disk and we didn't use a password, then the attcaker could replace the secret key with their own
   function unwrap_client_sec_key() {
-    var key_enc = lib.base64_to_bitarray(client_sec_key_base64);
-    var salt = lib.bitarray_slice(key_enc, 0, 128);
-    var key_enc_main = lib.bitarray_slice(key_enc, 128);
-    var sk_der = lib.bitarray_slice(lib.KDF(client_sec_key_password, salt), 0, 128);
-    var sk_cipher = lib.setup_cipher(sk_der);
-    var pair_sec_bits = lib.dec_gcm(sk_cipher, key_enc_main);
-    var pair_sec = sjcl.bn.fromBits(pair_sec_bits);
-    return new sjcl.ecc['ecdsa'].secretKey(curve, pair_sec);
+		try {
+			var key_enc = lib.base64_to_bitarray(client_sec_key_base64);
+			var salt = lib.bitarray_slice(key_enc, 0, 128);
+			var key_enc_main = lib.bitarray_slice(key_enc, 128);
+			var sk_der = lib.bitarray_slice(lib.KDF(client_sec_key_password, salt), 0, 128);
+			var sk_cipher = lib.setup_cipher(sk_der);
+			var pair_sec_bits = lib.dec_gcm(sk_cipher, key_enc_main);
+			var pair_sec = sjcl.bn.fromBits(pair_sec_bits);
+			return new sjcl.ecc['ecdsa'].secretKey(curve, pair_sec);
+		} catch (e) {
+			console.warn("Failed to load key. Exiting");
+			node.exit();
+		}
   }
 
   function protocol_abort() {
