@@ -101,6 +101,9 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
       server_log('connection closed');
       socket = null;
     });
+		socket.on('error', function(err) {
+			protocol_abort();
+		});
 
     server_log('received client connection');
 
@@ -120,8 +123,7 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
 			rejectUnauthorized: true,
       key: server_key,
       cert: server_cert,
-      passphrase: server_key_password,
-			// ca: [fs.readFileSync('data/rootCA.pem')]
+      passphrase: server_key_password
     };
 
     tls_server = tls.createServer(server_options, on_connect);
@@ -134,7 +136,7 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
 			});
 			
 			tls_server.on('clientError', function () {
-				server_log('client fucked up');
+				server_log('client error');
 			});
     });
 
