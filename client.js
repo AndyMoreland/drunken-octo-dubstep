@@ -88,7 +88,14 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
   }
 
   function process_server_msg(json_data) {
-    data = JSON.parse(json_data);
+
+		try {
+			data = JSON.parse(json_data);
+		} catch (ex) {
+			protocol_abort();
+			return;
+		}
+
     switch(data.type) {
     case TYPE['CHALLENGE']:
       if (protocol_state != 'START') {

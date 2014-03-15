@@ -50,9 +50,12 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
         return;
       }
 
-      protocol_state = 'ABORT';
-
-			var response_correct = lib.ECDSA_verify(client_pub_key, challenge_bitarray, lib.base64_to_bitarray(data.message));
+			try {
+				var response_correct = lib.ECDSA_verify(client_pub_key, challenge_bitarray, lib.base64_to_bitarray(data.message));
+			} catch (ex) {
+				protocol_abort();
+				return;
+			}
 
       if (response_correct) {
         server_log('authentication succeeded')
