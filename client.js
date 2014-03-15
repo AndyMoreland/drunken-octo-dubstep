@@ -1,4 +1,3 @@
-
 var lib = require('./lib');
 var sjcl = require('./sjcl');
 
@@ -148,6 +147,10 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
         socket.end();
       }
     });
+
+		socket.on('error', function (err) {
+			protocol_abort();
+		});
 
     socket.setEncoding('utf8');
 

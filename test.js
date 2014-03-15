@@ -1,6 +1,6 @@
 // Change these for testing:
-var test_server_key_password = 'banana';
-var test_client_key_password = 'banana';
+var test_server_key_password = 'dog';
+var test_client_key_password = 'fish';
 
 
 
@@ -11,7 +11,7 @@ var fs = require('fs');
 
 var server_key = fs.readFileSync('data/server.key');
 var server_crt = fs.readFileSync('data/server.crt');
-var ca_crt = fs.readFileSync('data/rootCA.pem')
+var ca_crt = fs.readFileSync('data2/rootCA.pem')
 
 var client_pub_key_base64 = fs.readFileSync('data/client_pub_key').toString('utf8');
 var client_sec_key_base64 = fs.readFileSync('data/client_sec_key').toString('utf8');
