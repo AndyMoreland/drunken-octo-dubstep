@@ -148,7 +148,7 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
 
       if (!check_cert(socket.getPeerCertificate())) {
         client_log('bad certificate received');
-        socket.end();
+				protocol_abort();
       }
     });
 
