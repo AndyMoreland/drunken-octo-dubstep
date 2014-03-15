@@ -84,7 +84,6 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
   }
 
   function on_connect(connection_socket) {
-		server_log("Got connection");
     if (socket != null) {
       server_log('rejecting additional client connections');
       connection_socket.end();
@@ -132,11 +131,11 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
       server_log('listening on port ' + port);
 
 			tls_server.on('close', function() {
-				server_log('closing server');
+				console.warn('closing server');
 			});
 			
 			tls_server.on('clientError', function () {
-				server_log('client error');
+				console.warn('client error');
 			});
     });
 

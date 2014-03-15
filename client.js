@@ -27,7 +27,7 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
 			return new sjcl.ecc['ecdsa'].secretKey(curve, pair_sec);
 		} catch (e) {
 			console.warn("Failed to load key. Exiting");
-			node.exit();
+			protocol_abort();
 		}
   }
 
@@ -104,7 +104,6 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
       break;
 
     case TYPE['SESSION_MESSAGE']:
-			console.log("[client] Got session message, protocol state: ", protocol_state);
       if (protocol_state != 'SUCCESS') {
         protocol_abort();
         return;
@@ -186,7 +185,6 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
   }
   
   client.disconnect = function() {
-		client_log("disconnecting");
     protocol_state = 'END';
     socket.end();
   }
