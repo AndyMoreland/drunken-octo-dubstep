@@ -29,7 +29,6 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
 
   var client_pub_key = unwrap_client_pub_key();
 
-	// FIXME is this long enough?
   function get_new_challenge() {
 		challenge_bitarray = lib.HMAC(initial_randomness, lib.string_to_bitarray("" + connection_count));
     return lib.bitarray_to_base64(challenge_bitarray);

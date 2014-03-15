@@ -13,8 +13,6 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
   var socket;
   var protocol_state;
 
-	// FIXME: could store key on disk -- would allow attacker w/ access to disk to screw you
-	// FIXME: if the attacker has access to disk and we didn't use a password, then the attcaker could replace the secret key with their own
   function unwrap_client_sec_key() {
 		try {
 			var key_enc = lib.base64_to_bitarray(client_sec_key_base64);
@@ -98,7 +96,6 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
         return;
       }
       protocol_state = 'CHALLENGE';
-			// FIXME make sure this is printable
       lib.send_message(socket, TYPE['RESPONSE'], 
 											 lib.bitarray_to_base64(lib.ECDSA_sign(client_sec_key, lib.base64_to_bitarray(data.message))));
       break;
@@ -133,7 +130,6 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
   client = {};
 
   client.connect = function(host, port, session_callback_f, session_close_callback_f) {
-		// FIXME check
     var client_options = {
       ca: ca_cert,
       host: host,
