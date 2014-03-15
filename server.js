@@ -31,7 +31,7 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
 
   function get_new_challenge() {
 		challenge_bitarray = lib.HMAC(initial_randomness, lib.string_to_bitarray("" + connection_count));
-    return lib.bitarray_to_base64(challenge_bitarray);
+		return lib.bitarray_to_base64(challenge_bitarray);
   }
 
   function process_client_msg(json_data) {
@@ -127,7 +127,12 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
       passphrase: server_key_password
     };
 
-    tls_server = tls.createServer(server_options, on_connect);
+		try {
+			tls_server = tls.createServer(server_options, on_connect);
+		} catch (ex) {
+			console.warn("Failed to reate server");
+			return null;
+		}
 
     tls_server.listen(port, function() {
       server_log('listening on port ' + port);

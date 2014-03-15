@@ -31,7 +31,6 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
 
   function protocol_abort() {
     client_log('protocol error');
-		console.trace("Protocol abort");
     socket.destroy();
     protocol_state = 'ABORT';
   }
@@ -48,7 +47,7 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
 			// Make sure the cert has reasonable properties
 			var fields = ["valid_from", "valid_to", "issuer", "subject", "fingerprint"];
 			for (var i in fields) {
-				if(!crt.hasOwnProperty(fields[i])) { protocol_abort(); }
+				if(!crt.hasOwnProperty(fields[i])) { protocol_abort(); return false; }
 			}
 
 			var valid_from = new Date(crt.valid_from);
@@ -58,10 +57,10 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
 			one_week_in_future.setDate(one_week_in_future.getDate() + 7);
 
 			// Make sure that the cert hasn't expired
-			if (!(valid_from < current_time) || !(current_time < valid_to)) { protocol_abort(); }
+			if (!(valid_from < current_time) || !(current_time < valid_to)) { protocol_abort(); return false; }
 
 			// Make sure that the cert won't expire in the next week
-			if (one_week_in_future > valid_to) { protocol_abort(); }
+			if (one_week_in_future > valid_to) { protocol_abort(); return false;}
 
 			var desired_values = {
 				C: "US",
@@ -76,12 +75,13 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
 			// Check that the certificate is correct
 			for (var key in desired_values) {
 				if (desired_values.hasOwnProperty(key)) {
-					if (desired_values[key] != crt.subject[key]) { protocol_abort(); }
+					if (desired_values[key] != crt.subject[key]) { protocol_abort(); return false; }
 				}
 			}
 
 		} catch (e) {
 			protocol_abort();
+			return false;
 		}
 		
     return true;
@@ -90,7 +90,7 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
   function process_server_msg(json_data) {
 
 		try {
-			data = JSON.parse(json_data);
+			var data = JSON.parse(json_data);
 		} catch (ex) {
 			protocol_abort();
 			return;
@@ -103,8 +103,14 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
         return;
       }
       protocol_state = 'CHALLENGE';
-      lib.send_message(socket, TYPE['RESPONSE'], 
+			try {
+				lib.send_message(socket, TYPE['RESPONSE'], 
 											 lib.bitarray_to_base64(lib.ECDSA_sign(client_sec_key, lib.base64_to_bitarray(data.message))));
+			} catch(ex) {
+				protocol_abort();
+				return;
+			}
+					
       break;
 
     case TYPE['SESSION_MESSAGE']:
